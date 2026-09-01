@@ -38,4 +38,13 @@ Also apply any other available Android-prefixed skill when its subject matches t
 - **Single module, layered packages.** Use the same package structure as the `android-module-structure` skill (core, feature, etc.) but as packages within `:app`, not separate modules.
 - **No tests unless asked.** Do not write tests unless the user explicitly requests them.
 - **Lazy mockup loading.** When building UI, read the HTML mockup file for that specific screen only — do not read the entire file upfront.
+
+### Git Rules
 - **Git hygiene.** `git add` every new file immediately after creating it. Create meaningful, modular commits at logical checkpoints — don't batch everything into one giant commit.
+- **Commit often.** Make small, meaningful commits at logical checkpoints. Avoid batching everything into one giant commit.
+- **Required commit behavior.** After any requested code, config, test, or documentation change, create a commit immediately after the work is done and validated. Use this commit format: `<prefix>: <infinite verb> + <description>`                                                                                                                                                                                                                   ┃
+    - `dev` for production code changes
+    - `test` for test code changes
+    - `conf` for configuration changes (Gradle, project config, dependency catalog, etc.)
+    - `doc` for documentation and code-adjacent guidance changes
+    - Example: `dev: add habit list screen`, `conf: update koin dependencies`, `doc: clarify app architecture guidance`
