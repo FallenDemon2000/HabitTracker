@@ -13,10 +13,11 @@ import com.example.habittracker.core.domain.model.HabitUpdate
 import com.example.habittracker.core.domain.model.TodayProgress
 import com.example.habittracker.core.domain.statistics.HabitStatisticsCalculator
 import com.example.habittracker.core.domain.validation.HabitValidator
-import com.example.habittracker.data.local.HabitCompletionDao
 import com.example.habittracker.data.local.HabitCompletionEntity
-import com.example.habittracker.data.local.HabitDao
 import com.example.habittracker.data.local.HabitDatabase
+import com.example.habittracker.data.local.dao.HabitCompletionDao
+import com.example.habittracker.data.local.dao.HabitDao
+import com.example.habittracker.data.local.toCompletionDomain
 import com.example.habittracker.data.local.toDomain
 import com.example.habittracker.data.local.toEntity
 import kotlinx.coroutines.flow.Flow
@@ -39,7 +40,7 @@ class HabitRepository(
     private val statisticsCalculator: HabitStatisticsCalculator,
 ) {
     fun observeHabits(): Flow<List<Habit>> {
-        return habitDao.observeAll().map { entities -> entities.map { it.toDomain() } }
+        return habitDao.observeAll().map { it.toDomain() }
     }
 
     fun observeHabit(habitId: HabitId): Flow<Habit?> {
@@ -48,7 +49,7 @@ class HabitRepository(
 
     fun observeScheduledHabits(date: LocalDate): Flow<List<Habit>> {
         return habitDao.observeScheduledForDate(date)
-            .map { entities -> entities.map { it.toDomain() } }
+            .map { it.toDomain() }
     }
 
     fun observeToday(today: LocalDate): Flow<TodayProgress> {
@@ -169,7 +170,7 @@ class HabitRepository(
 
     private fun observeCompletions(): Flow<List<HabitCompletion>> {
         return completionDao.observeAll().map { entities ->
-            entities.map(HabitCompletionEntity::toDomain)
+            entities.toCompletionDomain()
         }
     }
 }

@@ -12,13 +12,24 @@ class HabitValidator {
     fun normalizeName(name: String): String = name.trim()
 
     fun validateDraft(draft: HabitDraft, today: LocalDate): HabitError? {
-        return validateName(draft.name)
-            ?: validateIcon(draft.iconId)
-            ?: if (draft.creationDate.isAfter(today)) HabitError.CreationDateInFuture else null
+        val invalidName = validateName(draft.name)
+        val invalidIcon = validateIcon(draft.iconId)
+        return when {
+            invalidName != null -> invalidName
+            invalidIcon != null -> invalidIcon
+            draft.creationDate.isAfter(today) -> HabitError.CreationDateInFuture
+            else -> null
+        }
     }
 
     fun validateUpdate(update: HabitUpdate): HabitError? {
-        return validateName(update.name) ?: validateIcon(update.iconId)
+        val invalidName = validateName(update.name)
+        val invalidIcon = validateIcon(update.iconId)
+        return when {
+            invalidName != null -> invalidName
+            invalidIcon != null -> invalidIcon
+            else -> null
+        }
     }
 
     fun validateCompletion(habit: Habit, date: LocalDate, today: LocalDate): HabitError? {

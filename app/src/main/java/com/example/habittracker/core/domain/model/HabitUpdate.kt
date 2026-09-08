@@ -1,11 +1,7 @@
 package com.example.habittracker.core.domain.model
 
-import java.time.LocalDate
-
-data class Habit(
-    val id: HabitId,
+data class HabitUpdate(
     val name: String,
     val iconId: HabitIconId,
     val weekdayMask: WeekdayMask,
-    val creationDate: LocalDate,
 )

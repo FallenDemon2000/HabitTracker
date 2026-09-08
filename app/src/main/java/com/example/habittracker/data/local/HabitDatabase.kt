@@ -5,6 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.habittracker.data.local.dao.HabitCompletionDao
+import com.example.habittracker.data.local.dao.HabitDao
 
 /**
  * Version 1 contains only editable habit definitions and binary dated completions.
@@ -36,7 +39,7 @@ abstract class HabitDatabase : RoomDatabase() {
 }
 
 private object ValidationTriggers : RoomDatabase.Callback() {
-    override fun onCreate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+    override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
         db.execSQL(
             """
@@ -111,7 +114,7 @@ private object ValidationTriggers : RoomDatabase.Callback() {
         )
     }
 
-    override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+    override fun onOpen(db: SupportSQLiteDatabase) {
         super.onOpen(db)
         db.execSQL("PRAGMA foreign_keys = ON")
     }
