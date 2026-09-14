@@ -79,7 +79,7 @@ class HabitRepository(
                     Habit(
                         id = HabitId(id),
                         name = normalized.name,
-                        iconId = normalized.iconId,
+                        icon = normalized.icon,
                         schedule = normalized.schedule,
                         creationDate = normalized.creationDate,
                     ),
@@ -102,7 +102,7 @@ class HabitRepository(
             val updatedRows = habitDao.updateDefinition(
                 habitId = habitId.value,
                 name = normalized.name,
-                iconId = normalized.iconId.value,
+                iconId = normalized.icon.name,
                 weekdayMask = normalized.schedule.toBitMask(),
             )
             if (updatedRows == 0) {
@@ -111,7 +111,7 @@ class HabitRepository(
                 HabitResult.Success(
                     existing.toDomain().copy(
                         name = normalized.name,
-                        iconId = normalized.iconId,
+                        icon = normalized.icon,
                         schedule = normalized.schedule,
                     ),
                 )

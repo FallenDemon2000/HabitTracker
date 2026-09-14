@@ -10,7 +10,8 @@ import com.example.habittracker.data.local.dao.HabitCompletionDao
 import com.example.habittracker.data.local.dao.HabitDao
 
 /**
- * Version 2 stores date-times as epoch milliseconds at the Room boundary.
+ * Version 3 stores date-times as epoch milliseconds and icon enum names at the
+ * Room boundary.
  *
  * Streaks, percentages, active counts, and heatmap values are deliberately derived
  * from these rows. Future schema changes must use explicit migrations; destructive
@@ -18,7 +19,7 @@ import com.example.habittracker.data.local.dao.HabitDao
  */
 @Database(
     entities = [HabitEntity::class, HabitCompletionEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = true,
 )
 @TypeConverters(ZonedDateTimeConverters::class)
@@ -31,8 +32,17 @@ abstract class HabitDatabase : RoomDatabase() {
         fun create(context: Context): HabitDatabase {
             return Room.databaseBuilder(context, HabitDatabase::class.java, DATABASE_NAME)
                 .addCallback(ValidationTriggers)
-                .addMigrations(Migration1To2)
+                .addMigrations(Migration1To2, Migration2To3)
                 .build()
+        }
+
+        private val Migration2To3 = object : androidx.room.migration.Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("DROP TRIGGER IF EXISTS habits_validate_insert")
+                db.execSQL("DROP TRIGGER IF EXISTS habits_validate_update")
+                db.execSQL("DROP TRIGGER IF EXISTS completions_validate_insert")
+                db.execSQL("UPDATE habits SET icon_id = upper(icon_id)")
+            }
         }
 
         private val Migration1To2 = object : androidx.room.migration.Migration(1, 2) {
@@ -103,9 +113,9 @@ private object ValidationTriggers : RoomDatabase.Callback() {
                    OR length(NEW.name) > 50;
                 SELECT RAISE(ABORT, 'unknown habit icon')
                 WHERE NEW.icon_id NOT IN (
-                    'run', 'read', 'water', 'meditate', 'sleep', 'code', 'music', 'cook',
-                    'journal', 'gym', 'yoga', 'walk', 'cycle', 'study', 'no_phone',
-                    'vitamins', 'language', 'gratitude', 'health', 'organize'
+                    'RUN', 'READ', 'WATER', 'MEDITATE', 'SLEEP', 'CODE', 'MUSIC', 'COOK',
+                    'JOURNAL', 'GYM', 'YOGA', 'WALK', 'CYCLE', 'STUDY', 'NO_PHONE',
+                    'VITAMINS', 'LANGUAGE', 'GRATITUDE', 'HEALTH', 'ORGANIZE'
                 );
                 SELECT RAISE(ABORT, 'weekday mask must be between 1 and 127')
                 WHERE NEW.weekday_mask NOT BETWEEN 1 AND 127;
@@ -125,9 +135,9 @@ private object ValidationTriggers : RoomDatabase.Callback() {
                    OR length(NEW.name) > 50;
                 SELECT RAISE(ABORT, 'unknown habit icon')
                 WHERE NEW.icon_id NOT IN (
-                    'run', 'read', 'water', 'meditate', 'sleep', 'code', 'music', 'cook',
-                    'journal', 'gym', 'yoga', 'walk', 'cycle', 'study', 'no_phone',
-                    'vitamins', 'language', 'gratitude', 'health', 'organize'
+                    'RUN', 'READ', 'WATER', 'MEDITATE', 'SLEEP', 'CODE', 'MUSIC', 'COOK',
+                    'JOURNAL', 'GYM', 'YOGA', 'WALK', 'CYCLE', 'STUDY', 'NO_PHONE',
+                    'VITAMINS', 'LANGUAGE', 'GRATITUDE', 'HEALTH', 'ORGANIZE'
                 );
                 SELECT RAISE(ABORT, 'weekday mask must be between 1 and 127')
                 WHERE NEW.weekday_mask NOT BETWEEN 1 AND 127;
