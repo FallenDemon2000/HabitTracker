@@ -1,4 +1,4 @@
-package com.example.habittracker.ui.theme
+package com.example.habittracker.presentation.theme
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
