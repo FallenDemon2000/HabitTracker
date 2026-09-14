@@ -6,12 +6,12 @@ import com.example.habittracker.core.domain.model.HabitDraft
 import com.example.habittracker.core.domain.model.HabitIconId
 import com.example.habittracker.core.domain.model.HabitUpdate
 import com.example.habittracker.core.domain.model.HabitIcons
-import java.time.LocalDate
+import java.time.ZonedDateTime
 
 class HabitValidator {
     fun normalizeName(name: String): String = name.trim()
 
-    fun validateDraft(draft: HabitDraft, today: LocalDate): HabitError? {
+    fun validateDraft(draft: HabitDraft, today: ZonedDateTime): HabitError? {
         val invalidName = validateName(draft.name)
         val invalidIcon = validateIcon(draft.iconId)
         return when {
@@ -32,17 +32,21 @@ class HabitValidator {
         }
     }
 
-    fun validateCompletion(habit: Habit, date: LocalDate, today: LocalDate): HabitError? {
+    fun validateCompletion(
+        habit: Habit,
+        date: ZonedDateTime,
+        today: ZonedDateTime,
+    ): HabitError? {
         return when {
-            date.isBefore(habit.creationDate) ->
+            date.toLocalDate().isBefore(habit.creationDate.toLocalDate()) ->
                 HabitError.CompletionDateInvalid(
                     HabitError.CompletionDateInvalid.CompletionDateReason.BEFORE_CREATION,
                 )
-            date.isAfter(today) ->
+            date.toLocalDate().isAfter(today.toLocalDate()) ->
                 HabitError.CompletionDateInvalid(
                     HabitError.CompletionDateInvalid.CompletionDateReason.IN_THE_FUTURE,
                 )
-            !habit.weekdayMask.isScheduled(date) ->
+            !habit.schedule.isScheduled(date) ->
                 HabitError.CompletionDateInvalid(
                     HabitError.CompletionDateInvalid.CompletionDateReason.NOT_SCHEDULED,
                 )
