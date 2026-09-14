@@ -10,27 +10,29 @@ import com.example.habittracker.core.domain.model.TodayHabit
 import com.example.habittracker.core.domain.model.TodayProgress
 import java.time.DayOfWeek
 import java.time.LocalDate
+import java.time.ZonedDateTime
 
 /**
  * Computes all presentation-ready metrics from a supplied snapshot.
  *
- * Supplying [today] keeps calculations deterministic and makes the date boundary
- * explicit: denominators never include dates before creation or after today.
+ * Public date values retain their zone. Calendar calculations deliberately use
+ * local dates so a completion remains a completion for one calendar day.
  */
 class HabitStatisticsCalculator {
     fun todayProgress(
         habits: List<Habit>,
         completions: List<HabitCompletion>,
-        today: LocalDate,
+        today: ZonedDateTime,
     ): TodayProgress {
         val completionDates = completionDatesByHabit(completions)
+        val todayDate = today.toLocalDate()
         val scheduled = habits
-            .filter { !today.isBefore(it.creationDate) && it.weekdayMask.isScheduled(today) }
+            .filter { todayDate >= it.creationDate.toLocalDate() && isScheduled(it, todayDate, today.zone) }
             .map { habit ->
                 TodayHabit(
                     habit = habit,
-                    completed = today in completionDates[habit.id].orEmpty(),
-                    currentStreak = currentStreak(habit, completionDates[habit.id].orEmpty(), today),
+                    completed = todayDate in completionDates[habit.id].orEmpty(),
+                    currentStreak = currentStreak(habit, completionDates[habit.id].orEmpty(), todayDate, today.zone),
                 )
             }
         return TodayProgress(today, scheduled)
@@ -39,22 +41,23 @@ class HabitStatisticsCalculator {
     fun statistics(
         habits: List<Habit>,
         completions: List<HabitCompletion>,
-        today: LocalDate,
+        today: ZonedDateTime,
     ): HabitStatistics {
         val completionDates = completionDatesByHabit(completions)
+        val todayDate = today.toLocalDate()
         val streaks = habits.map { habit ->
             val dates = completionDates[habit.id].orEmpty()
             HabitStreak(
                 habitId = habit.id,
-                current = currentStreak(habit, dates, today),
-                best = bestStreak(habit, dates, today),
+                current = currentStreak(habit, dates, todayDate, today.zone),
+                best = bestStreak(habit, dates, todayDate, today.zone),
             )
         }
         return HabitStatistics(
             today = todayProgress(habits, completions, today),
-            currentWeekPercentage = currentWeekPercentage(habits, completionDates, today),
+            currentWeekPercentage = currentWeekPercentage(habits, completionDates, todayDate, today.zone),
             activeCount = habits.size,
-            heatmap = fourWeekHeatmap(habits, completionDates, today),
+            heatmap = fourWeekHeatmap(habits, completionDates, todayDate, today.zone),
             streaks = streaks,
         )
     }
@@ -63,14 +66,15 @@ class HabitStatisticsCalculator {
         habits: List<Habit>,
         completionDates: Map<HabitId, Set<LocalDate>>,
         today: LocalDate,
+        zone: java.time.ZoneId,
     ): Int {
         val monday = today.with(DayOfWeek.MONDAY)
         var scheduled = 0
         var completed = 0
         habits.forEach { habit ->
-            var date = maxOf(habit.creationDate, monday)
+            var date = maxOf(habit.creationDate.toLocalDate(), monday)
             while (!date.isAfter(today)) {
-                if (habit.weekdayMask.isScheduled(date)) {
+                if (isScheduled(habit, date, zone)) {
                     scheduled++
                     if (date in completionDates[habit.id].orEmpty()) completed++
                 }
@@ -84,22 +88,24 @@ class HabitStatisticsCalculator {
         habits: List<Habit>,
         completionDates: Map<HabitId, Set<LocalDate>>,
         today: LocalDate,
+        zone: java.time.ZoneId,
     ): List<HeatmapCell> {
         val firstMonday = today.with(DayOfWeek.MONDAY).minusWeeks(3)
         return (0L until 28L).map { offset ->
             val date = firstMonday.plusDays(offset)
+            val zonedDate = date.atStartOfDay(zone)
             if (date.isAfter(today)) {
-                HeatmapCell(date, 0, 0, null)
+                HeatmapCell(zonedDate, 0, 0, null)
             } else {
                 var scheduled = 0
                 var completed = 0
                 habits.forEach { habit ->
-                    if (!date.isBefore(habit.creationDate) && habit.weekdayMask.isScheduled(date)) {
+                    if (!date.isBefore(habit.creationDate.toLocalDate()) && isScheduled(habit, date, zone)) {
                         scheduled++
                         if (date in completionDates[habit.id].orEmpty()) completed++
                     }
                 }
-                HeatmapCell(date, completed, scheduled, percentageOrNull(completed, scheduled))
+                HeatmapCell(zonedDate, completed, scheduled, percentageOrNull(completed, scheduled))
             }
         }
     }
@@ -108,22 +114,21 @@ class HabitStatisticsCalculator {
         habit: Habit,
         completionDates: Set<LocalDate>,
         today: LocalDate,
+        zone: java.time.ZoneId,
     ): Int {
-        if (today.isBefore(habit.creationDate)) return 0
+        if (today.isBefore(habit.creationDate.toLocalDate())) return 0
 
-        var cursor = if (
-            habit.weekdayMask.isScheduled(today) && today in completionDates
-        ) {
+        var cursor = if (isScheduled(habit, today, zone) && today in completionDates) {
             today
         } else {
-            previousScheduledOnOrBefore(habit, today.minusDays(1))
+            previousScheduledOnOrBefore(habit, today.minusDays(1), zone)
         } ?: return 0
 
         var streak = 0
-        while (!cursor.isBefore(habit.creationDate)) {
-            if (!habit.weekdayMask.isScheduled(cursor) || cursor !in completionDates) break
+        while (!cursor.isBefore(habit.creationDate.toLocalDate())) {
+            if (!isScheduled(habit, cursor, zone) || cursor !in completionDates) break
             streak++
-            cursor = previousScheduledOnOrBefore(habit, cursor.minusDays(1)) ?: break
+            cursor = previousScheduledOnOrBefore(habit, cursor.minusDays(1), zone) ?: break
         }
         return streak
     }
@@ -132,13 +137,14 @@ class HabitStatisticsCalculator {
         habit: Habit,
         completionDates: Set<LocalDate>,
         today: LocalDate,
+        zone: java.time.ZoneId,
     ): Int {
-        if (today.isBefore(habit.creationDate)) return 0
-        var date = habit.creationDate
+        if (today.isBefore(habit.creationDate.toLocalDate())) return 0
+        var date = habit.creationDate.toLocalDate()
         var current = 0
         var best = 0
         while (!date.isAfter(today)) {
-            if (habit.weekdayMask.isScheduled(date)) {
+            if (isScheduled(habit, date, zone)) {
                 if (date in completionDates) {
                     current++
                     best = maxOf(best, current)
@@ -151,20 +157,28 @@ class HabitStatisticsCalculator {
         return best
     }
 
-    private fun previousScheduledOnOrBefore(habit: Habit, date: LocalDate): LocalDate? {
+    private fun previousScheduledOnOrBefore(
+        habit: Habit,
+        date: LocalDate,
+        zone: java.time.ZoneId,
+    ): LocalDate? {
         var cursor = date
-        while (!cursor.isBefore(habit.creationDate)) {
-            if (habit.weekdayMask.isScheduled(cursor)) return cursor
+        while (!cursor.isBefore(habit.creationDate.toLocalDate())) {
+            if (isScheduled(habit, cursor, zone)) return cursor
             cursor = cursor.minusDays(1)
         }
         return null
+    }
+
+    private fun isScheduled(habit: Habit, date: LocalDate, zone: java.time.ZoneId): Boolean {
+        return habit.schedule.isScheduled(date.atStartOfDay(zone))
     }
 
     private fun completionDatesByHabit(
         completions: List<HabitCompletion>,
     ): Map<HabitId, Set<LocalDate>> {
         return completions.groupBy(HabitCompletion::habitId)
-            .mapValues { (_, values) -> values.mapTo(mutableSetOf(), HabitCompletion::date) }
+            .mapValues { (_, values) -> values.mapTo(mutableSetOf()) { it.date.toLocalDate() } }
     }
 
     private fun percentage(completed: Int, scheduled: Int): Int {

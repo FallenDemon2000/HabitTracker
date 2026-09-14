@@ -5,7 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import com.example.habittracker.data.local.HabitEntity
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
+import java.time.ZonedDateTime
 
 @Dao
 interface HabitDao {
@@ -19,17 +19,20 @@ interface HabitDao {
     suspend fun getById(habitId: Long): HabitEntity?
 
     /**
-     * SQLite `%w` is Sunday=0 through Saturday=6, matching [weekdayBit].
+     * SQLite `%w` is Sunday=0 through Saturday=6, matching the persisted schedule mask.
      */
     @Query(
         """
         SELECT * FROM habits
         WHERE creation_date <= :date
-          AND (weekday_mask & (1 << CAST(strftime('%w', :date) AS INTEGER))) != 0
+          AND (
+              weekday_mask &
+              (1 << CAST(strftime('%w', (:date / 1000), 'unixepoch', 'localtime') AS INTEGER))
+          ) != 0
         ORDER BY id ASC
         """,
     )
-    fun observeScheduledForDate(date: LocalDate): Flow<List<HabitEntity>>
+    fun observeScheduledForDate(date: ZonedDateTime): Flow<List<HabitEntity>>
 
     @Insert
     suspend fun insert(habit: HabitEntity): Long

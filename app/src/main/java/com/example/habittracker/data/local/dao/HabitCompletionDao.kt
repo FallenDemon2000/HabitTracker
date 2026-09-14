@@ -7,7 +7,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.habittracker.data.local.HabitCompletionEntity
 import kotlinx.coroutines.flow.Flow
-import java.time.LocalDate
+import java.time.ZonedDateTime
 
 @Dao
 interface HabitCompletionDao {
@@ -21,7 +21,7 @@ interface HabitCompletionDao {
         ORDER BY date ASC, habit_id ASC
         """,
     )
-    fun observeForDateRange(from: LocalDate, to: LocalDate): Flow<List<HabitCompletionEntity>>
+    fun observeForDateRange(from: ZonedDateTime, to: ZonedDateTime): Flow<List<HabitCompletionEntity>>
 
     @Query(
         """
@@ -31,7 +31,7 @@ interface HabitCompletionDao {
         )
         """,
     )
-    suspend fun exists(habitId: Long, date: LocalDate): Boolean
+    suspend fun exists(habitId: Long, date: ZonedDateTime): Boolean
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(completion: HabitCompletionEntity): Long

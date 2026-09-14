@@ -23,7 +23,7 @@ import com.example.habittracker.data.local.toEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
+import java.time.ZonedDateTime
 
 /**
  * The only data-layer entry point for habits and completions.
@@ -47,18 +47,18 @@ class HabitRepository(
         return habitDao.observeById(habitId.value).map { it?.toDomain() }
     }
 
-    fun observeScheduledHabits(date: LocalDate): Flow<List<Habit>> {
+    fun observeScheduledHabits(date: ZonedDateTime): Flow<List<Habit>> {
         return habitDao.observeScheduledForDate(date)
             .map { it.toDomain() }
     }
 
-    fun observeToday(today: LocalDate): Flow<TodayProgress> {
+    fun observeToday(today: ZonedDateTime): Flow<TodayProgress> {
         return combine(observeHabits(), observeCompletions()) { habits, completions ->
             statisticsCalculator.todayProgress(habits, completions, today)
         }
     }
 
-    fun observeStatistics(today: LocalDate): Flow<HabitStatistics> {
+    fun observeStatistics(today: ZonedDateTime): Flow<HabitStatistics> {
         return combine(observeHabits(), observeCompletions()) { habits, completions ->
             statisticsCalculator.statistics(habits, completions, today)
         }
@@ -66,7 +66,7 @@ class HabitRepository(
 
     suspend fun createHabit(
         draft: HabitDraft,
-        today: LocalDate = LocalDate.now(),
+        today: ZonedDateTime = ZonedDateTime.now(),
     ): HabitResult<Habit> {
         val normalized = draft.copy(name = validator.normalizeName(draft.name))
         validator.validateDraft(normalized, today)?.let { return HabitResult.Failure(it) }
@@ -80,7 +80,7 @@ class HabitRepository(
                         id = HabitId(id),
                         name = normalized.name,
                         iconId = normalized.iconId,
-                        weekdayMask = normalized.weekdayMask,
+                        schedule = normalized.schedule,
                         creationDate = normalized.creationDate,
                     ),
                 )
@@ -103,7 +103,7 @@ class HabitRepository(
                 habitId = habitId.value,
                 name = normalized.name,
                 iconId = normalized.iconId.value,
-                weekdayMask = normalized.weekdayMask.value,
+                weekdayMask = normalized.schedule.toBitMask(),
             )
             if (updatedRows == 0) {
                 HabitResult.Failure(HabitError.NotFound(habitId))
@@ -112,7 +112,7 @@ class HabitRepository(
                     existing.toDomain().copy(
                         name = normalized.name,
                         iconId = normalized.iconId,
-                        weekdayMask = normalized.weekdayMask,
+                        schedule = normalized.schedule,
                     ),
                 )
             }
@@ -126,18 +126,19 @@ class HabitRepository(
      */
     suspend fun toggleCompletion(
         habitId: HabitId,
-        date: LocalDate,
-        today: LocalDate = LocalDate.now(),
+        date: ZonedDateTime,
+        today: ZonedDateTime = ZonedDateTime.now(),
     ): HabitResult<Boolean> {
+        val normalizedDate = date.toLocalDate().atStartOfDay(date.zone)
         return try {
             database.withTransaction {
                 val habit = habitDao.getById(habitId.value)?.toDomain()
                     ?: return@withTransaction HabitResult.Failure(HabitError.NotFound(habitId))
-                validator.validateCompletion(habit, date, today)?.let {
+                validator.validateCompletion(habit, normalizedDate, today)?.let {
                     return@withTransaction HabitResult.Failure(it)
                 }
-                val completion = HabitCompletionEntity(habitId.value, date)
-                if (completionDao.exists(habitId.value, date)) {
+                val completion = HabitCompletionEntity(habitId.value, normalizedDate)
+                if (completionDao.exists(habitId.value, normalizedDate)) {
                     completionDao.delete(completion)
                     HabitResult.Success(false)
                 } else {

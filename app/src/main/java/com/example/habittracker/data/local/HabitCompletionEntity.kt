@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
+import java.time.ZonedDateTime
 
 @Entity(
     tableName = "habit_completions",
@@ -21,5 +22,5 @@ import androidx.room.Index
 data class HabitCompletionEntity(
     @ColumnInfo(name = "habit_id")
     val habitId: Long,
-    val date: java.time.LocalDate,
+    val date: ZonedDateTime,
 )

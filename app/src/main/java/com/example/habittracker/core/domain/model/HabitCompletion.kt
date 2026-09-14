@@ -1,8 +1,8 @@
 package com.example.habittracker.core.domain.model
 
-import java.time.LocalDate
+import java.time.ZonedDateTime
 
 data class HabitCompletion(
     val habitId: HabitId,
-    val date: LocalDate,
+    val date: ZonedDateTime,
 )

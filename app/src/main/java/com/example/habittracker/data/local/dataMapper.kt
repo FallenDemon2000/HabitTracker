@@ -6,7 +6,7 @@ import com.example.habittracker.core.domain.model.HabitDraft
 import com.example.habittracker.core.domain.model.HabitIconId
 import com.example.habittracker.core.domain.model.HabitId
 import com.example.habittracker.core.domain.model.HabitIcons
-import com.example.habittracker.core.domain.model.WeekdayMask
+import com.example.habittracker.core.domain.model.HabitSchedule
 
 fun HabitEntity.toDomain(): Habit {
     val storedIcon = iconId.takeIf { it.isNotBlank() }?.let(::HabitIconId)
@@ -18,7 +18,7 @@ fun HabitEntity.toDomain(): Habit {
         } else {
             HabitIcons.fallback
         },
-        weekdayMask = WeekdayMask(weekdayMask),
+        schedule = HabitSchedule.fromBitMask(weekdayMask),
         creationDate = creationDate,
     )
 }
@@ -31,7 +31,7 @@ fun HabitCompletionEntity.toDomain(): HabitCompletion = HabitCompletion(
 fun HabitDraft.toEntity(): HabitEntity = HabitEntity(
     name = name,
     iconId = iconId.value,
-    weekdayMask = weekdayMask.value,
+    weekdayMask = schedule.toBitMask(),
     creationDate = creationDate,
 )
 
@@ -39,7 +39,7 @@ fun Habit.toEntity(): HabitEntity = HabitEntity(
     id = id.value,
     name = name,
     iconId = iconId.value,
-    weekdayMask = weekdayMask.value,
+    weekdayMask = schedule.toBitMask(),
     creationDate = creationDate,
 )
 

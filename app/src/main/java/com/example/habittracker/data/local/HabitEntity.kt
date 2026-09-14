@@ -3,7 +3,7 @@ package com.example.habittracker.data.local
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.time.LocalDate
+import java.time.ZonedDateTime
 
 @Entity(tableName = "habits")
 data class HabitEntity(
@@ -15,5 +15,5 @@ data class HabitEntity(
     @ColumnInfo(name = "weekday_mask")
     val weekdayMask: Int,
     @ColumnInfo(name = "creation_date")
-    val creationDate: LocalDate,
+    val creationDate: ZonedDateTime,
 )
