@@ -11,7 +11,7 @@ data class HabitEntity(
     val id: Long = 0,
     val name: String,
     @ColumnInfo(name = "icon_id")
-    val iconId: String,
+    val icon: String,
     @ColumnInfo(name = "weekday_mask")
     val weekdayMask: Int,
     @ColumnInfo(name = "creation_date")

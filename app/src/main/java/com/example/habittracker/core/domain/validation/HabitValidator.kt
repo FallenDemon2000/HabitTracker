@@ -3,7 +3,7 @@ package com.example.habittracker.core.domain.validation
 import com.example.habittracker.core.domain.error.HabitError
 import com.example.habittracker.core.domain.model.Habit
 import com.example.habittracker.core.domain.model.HabitDraft
-import com.example.habittracker.core.domain.model.HabitIconId
+import com.example.habittracker.core.domain.model.HabitIcon
 import com.example.habittracker.core.domain.model.HabitUpdate
 import com.example.habittracker.core.domain.model.HabitIcons
 import java.time.ZonedDateTime
@@ -13,7 +13,7 @@ class HabitValidator {
 
     fun validateDraft(draft: HabitDraft, today: ZonedDateTime): HabitError? {
         val invalidName = validateName(draft.name)
-        val invalidIcon = validateIcon(draft.iconId)
+        val invalidIcon = validateIcon(draft.icon)
         return when {
             invalidName != null -> invalidName
             invalidIcon != null -> invalidIcon
@@ -24,7 +24,7 @@ class HabitValidator {
 
     fun validateUpdate(update: HabitUpdate): HabitError? {
         val invalidName = validateName(update.name)
-        val invalidIcon = validateIcon(update.iconId)
+        val invalidIcon = validateIcon(update.icon)
         return when {
             invalidName != null -> invalidName
             invalidIcon != null -> invalidIcon
@@ -64,7 +64,7 @@ class HabitValidator {
         }
     }
 
-    private fun validateIcon(iconId: HabitIconId): HabitError? {
-        return if (HabitIcons.isKnown(iconId)) null else HabitError.InvalidIcon(iconId.value)
+    private fun validateIcon(icon: HabitIcon): HabitError? {
+        return if (HabitIcons.isKnown(icon)) null else HabitError.InvalidIcon(icon.name)
     }
 }

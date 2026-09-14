@@ -4,7 +4,7 @@ import java.time.ZonedDateTime
 
 data class HabitDraft(
     val name: String,
-    val iconId: HabitIconId,
+    val icon: HabitIcon,
     val schedule: HabitSchedule,
     val creationDate: ZonedDateTime,
 )
