@@ -55,7 +55,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.habittracker.core.domain.model.HabitIcon
+import com.example.habittracker.core.domain.model.HabitId
 import com.example.habittracker.presentation.ui.components.AppButton
 import com.example.habittracker.presentation.ui.components.AppButtonType
 import com.example.habittracker.presentation.ui.components.AppDaySelector
@@ -64,6 +66,8 @@ import com.example.habittracker.presentation.ui.components.AppTextField
 import com.example.habittracker.presentation.ui.components.IconBadge
 import com.example.habittracker.presentation.ui.components.ScreenHeader
 import com.example.habittracker.presentation.theme.HabitTrackerTheme
+import com.example.habittracker.presentation.viewmodel.HabitEditorViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.material3.MaterialTheme
 import java.time.DayOfWeek
 import java.util.Locale
@@ -72,19 +76,59 @@ enum class HabitEditorMode { CREATE, EDIT }
 
 @Composable
 fun HabitEditorScreen(
-    mode: HabitEditorMode = HabitEditorMode.CREATE,
-    selectedIcon: HabitIcon = HabitIcon.RUN,
-    initialName: String = "Morning Run",
-    selectedDays: Set<DayOfWeek> = setOf(DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY),
-    onBack: () -> Unit = {},
-    onSave: (String, HabitIcon, Set<DayOfWeek>) -> Unit = { _, _, _ -> },
-    onDelete: (() -> Unit)? = null,
-    onDiscard: (() -> Unit)? = null,
+    mode: HabitEditorMode,
+    habitId: Long?,
+    onBack: () -> Unit,
+    onSave: (String, HabitIcon, Set<DayOfWeek>) -> Unit,
+    onDelete: (() -> Unit),
+    onDiscard: (() -> Unit),
+    viewModel: HabitEditorViewModel = koinViewModel(),
 ) {
-    var name by remember { mutableStateOf(initialName) }
-    var activeIcon by remember { mutableStateOf(selectedIcon) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    HabitEditorView(
+        mode = mode,
+        name = uiState.name,
+        icon = uiState.icon,
+        selectedDays = uiState.selectedDays,
+        onNameChange = { value -> viewModel.onNameChanged(value) },
+        onIconChange = { value -> viewModel.onIconChanged(value) },
+        onDaysChange = { value -> viewModel.onDaysChanged(value) },
+        onBack = onBack,
+        onSave = { name, icon, days ->
+            viewModel.onNameChanged(name)
+            viewModel.onIconChanged(icon)
+            viewModel.onDaysChanged(days)
+            viewModel.saveHabit(mode, name, icon, days)
+            onSave(name, icon, days)
+            onBack()
+        },
+        onDelete = {
+            val resolvedId = habitId ?: return@HabitEditorView
+            viewModel.deleteHabit(HabitId(resolvedId))
+            onDelete?.invoke() ?: onBack()
+        },
+        onDiscard = onDiscard,
+    )
+}
+
+@Composable
+private fun HabitEditorView(
+    mode: HabitEditorMode,
+    name: String,
+    icon: HabitIcon,
+    selectedDays: Set<DayOfWeek>,
+    onNameChange: (String) -> Unit,
+    onIconChange: (HabitIcon) -> Unit,
+    onDaysChange: (Set<DayOfWeek>) -> Unit,
+    onBack: () -> Unit,
+    onSave: (String, HabitIcon, Set<DayOfWeek>) -> Unit,
+    onDelete: (() -> Unit),
+    onDiscard: (() -> Unit),
+) {
+    var nameValue by remember(name) { mutableStateOf(name) }
+    var activeIcon by remember(icon) { mutableStateOf(icon) }
     var expandedPicker by remember { mutableStateOf(mode == HabitEditorMode.CREATE) }
-    var days by remember { mutableStateOf(selectedDays) }
+    var days by remember(selectedDays) { mutableStateOf(selectedDays) }
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -163,7 +207,11 @@ fun HabitEditorScreen(
                                 color = if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                                 shape = RoundedCornerShape(12.dp),
                             )
-                            .clickable { activeIcon = icon; expandedPicker = false },
+                            .clickable {
+                                activeIcon = icon
+                                onIconChange(icon)
+                                expandedPicker = false
+                            },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -180,8 +228,11 @@ fun HabitEditorScreen(
         Spacer(modifier = Modifier.height(20.dp))
 
         AppTextField(
-            value = name,
-            onValueChange = { name = it },
+            value = nameValue,
+            onValueChange = {
+                nameValue = it
+                onNameChange(it)
+            },
             label = "Name",
             placeholder = "Habit name",
         )
@@ -214,6 +265,7 @@ fun HabitEditorScreen(
                     selected = days.contains(day),
                     onClick = {
                         days = if (days.contains(day)) days - day else days + day
+                        onDaysChange(days)
                     },
                     modifier = Modifier.weight(1f),
                 )
@@ -225,10 +277,10 @@ fun HabitEditorScreen(
         AppButton(
             text = if (mode == HabitEditorMode.CREATE) "Save Habit" else "Save Changes",
             onClick = {
-                if (name.isBlank() || days.isEmpty()) {
+                if (nameValue.isBlank() || days.isEmpty()) {
                     return@AppButton
                 }
-                onSave(name.trim(), activeIcon, days)
+                onSave(nameValue.trim(), activeIcon, days)
             },
             type = AppButtonType.Primary,
         )
@@ -308,6 +360,18 @@ private fun habitIconToVector(icon: HabitIcon): ImageVector = when (icon) {
 @Composable
 private fun CreateHabitPreview() {
     HabitTrackerTheme {
-        HabitEditorScreen(mode = HabitEditorMode.CREATE)
+        HabitEditorView(
+            mode = HabitEditorMode.CREATE,
+            name = "Morning Run",
+            icon = HabitIcon.RUN,
+            selectedDays = setOf(DayOfWeek.MONDAY, DayOfWeek.WEDNESDAY, DayOfWeek.FRIDAY),
+            onNameChange = {},
+            onIconChange = {},
+            onDaysChange = {},
+            onBack = {},
+            onSave = { _, _, _ -> },
+            onDelete = {},
+            onDiscard = {},
+        )
     }
 }
