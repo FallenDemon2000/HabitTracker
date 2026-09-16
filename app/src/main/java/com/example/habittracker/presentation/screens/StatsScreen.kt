@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.habittracker.core.domain.model.HabitIcon
 import com.example.habittracker.core.domain.model.HabitStatistics
 import com.example.habittracker.core.domain.model.HabitStreak
@@ -50,13 +52,32 @@ import com.example.habittracker.presentation.ui.components.AppCard
 import com.example.habittracker.presentation.ui.components.AppIconButton
 import com.example.habittracker.presentation.ui.components.ScreenHeader
 import com.example.habittracker.presentation.theme.HabitTrackerTheme
+import com.example.habittracker.presentation.viewmodel.StatsUiState
+import com.example.habittracker.presentation.viewmodel.StatsViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.material3.MaterialTheme
 import java.time.ZonedDateTime
 
 @Composable
 fun StatsScreen(
-    statistics: HabitStatistics = sampleStatistics(),
-    onBack: () -> Unit = {},
+    onBack: () -> Unit,
+    viewModel: StatsViewModel = koinViewModel(),
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    StatsView(
+        currentWeekPercentage = uiState.currentWeekPercentage,
+        bestStreak = uiState.bestStreak,
+        activeCount = uiState.activeCount,
+        onBack = onBack,
+    )
+}
+
+@Composable
+private fun StatsView(
+    currentWeekPercentage: Int,
+    bestStreak: Int,
+    activeCount: Int,
+    onBack: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -90,19 +111,19 @@ fun StatsScreen(
         ) {
             SummaryCard(
                 label = "This Week",
-                value = "${statistics.currentWeekPercentage}%",
+                value = "${currentWeekPercentage}%",
                 valueColor = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
                 label = "Best Streak",
-                value = "${statistics.streaks.maxOfOrNull { it.best } ?: 0}",
+                value = "$bestStreak",
                 valueColor = Color(0xFF34D399),
                 modifier = Modifier.weight(1f),
             )
             SummaryCard(
                 label = "Active",
-                value = "${statistics.activeCount}",
+                value = "$activeCount",
                 valueColor = Color(0xFFF472B6),
                 modifier = Modifier.weight(1f),
             )
@@ -238,7 +259,7 @@ fun StatsScreen(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(statistics.streaks, key = { it.habitId.value }) { streak ->
+            items(sampleStatistics().streaks, key = { it.habitId.value }) { streak ->
                 HabitStreakRow(
                     habitName = habitName(streak.habitId.value),
                     icon = streakIcon(streak.habitId.value),
@@ -390,6 +411,11 @@ private fun habitName(id: Long): String = when (id.toInt() % 4) {
 @Composable
 private fun StatsScreenPreview() {
     HabitTrackerTheme {
-        StatsScreen()
+        StatsView(
+            currentWeekPercentage = 87,
+            bestStreak = 12,
+            activeCount = 7,
+            onBack = {},
+        )
     }
 }

@@ -42,6 +42,7 @@ import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.habittracker.core.domain.model.Habit
 import com.example.habittracker.core.domain.model.HabitId
 import com.example.habittracker.core.domain.model.HabitIcon
@@ -62,6 +64,9 @@ import com.example.habittracker.presentation.ui.components.AppProgressBar
 import com.example.habittracker.presentation.ui.components.IconBadge
 import com.example.habittracker.presentation.ui.components.ScreenHeader
 import com.example.habittracker.presentation.theme.HabitTrackerTheme
+import com.example.habittracker.presentation.viewmodel.HabitItemUi
+import com.example.habittracker.presentation.viewmodel.TodayViewModel
+import org.koin.androidx.compose.koinViewModel
 import androidx.compose.material3.MaterialTheme
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -69,15 +74,39 @@ import java.util.Locale
 
 @Composable
 fun TodayScreen(
-    date: ZonedDateTime = ZonedDateTime.now(),
-    habits: List<TodayHabit> = sampleTodayHabits(),
-    onStatsClick: () -> Unit = {},
-    onAddHabit: () -> Unit = {},
-    onToggleHabit: (Long) -> Unit = {},
-    onEditHabit: (Long) -> Unit = {},
+    onStatsClick: () -> Unit,
+    onAddHabit: () -> Unit,
+    onToggleHabit: (Long) -> Unit,
+    onEditHabit: (Long) -> Unit,
+    viewModel: TodayViewModel = koinViewModel(),
 ) {
-    val progress = if (habits.isEmpty()) 0f else habits.count { it.completed }.toFloat() / habits.size.toFloat()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    TodayView(
+        dateLabel = uiState.dateLabel,
+        habits = uiState.habits,
+        progressText = uiState.progressText,
+        progress = uiState.progress,
+        onStatsClick = onStatsClick,
+        onAddHabit = onAddHabit,
+        onToggleHabit = { habitId ->
+            onToggleHabit(habitId)
+            viewModel.onToggleHabit(habitId)
+        },
+        onEditHabit = onEditHabit,
+    )
+}
 
+@Composable
+private fun TodayView(
+    dateLabel: String,
+    habits: List<HabitItemUi>,
+    progressText: String,
+    progress: Float,
+    onStatsClick: () -> Unit,
+    onAddHabit: () -> Unit,
+    onToggleHabit: (Long) -> Unit,
+    onEditHabit: (Long) -> Unit,
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -107,7 +136,7 @@ fun TodayScreen(
             )
 
             Text(
-                text = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d").withLocale(Locale.getDefault())),
+                text = dateLabel.ifBlank { ZonedDateTime.now().format(DateTimeFormatter.ofPattern("EEEE, MMMM d").withLocale(Locale.getDefault())) },
                 style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
                 modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
             )
@@ -124,7 +153,7 @@ fun TodayScreen(
                         style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurfaceVariant),
                     )
                     Text(
-                        text = "${habits.count { it.completed }} / ${habits.size}",
+                        text = progressText.ifBlank { "${habits.count { it.completed }} / ${habits.size}" },
                         style = MaterialTheme.typography.bodyLarge.copy(
                             color = MaterialTheme.colorScheme.secondary,
                             fontWeight = FontWeight.SemiBold,
@@ -167,11 +196,11 @@ fun TodayScreen(
                         .padding(top = 12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(habits, key = { it.habit.id.value }) { habitItem ->
+                    items(habits, key = { it.id }) { habitItem ->
                         HabitListItem(
                             item = habitItem,
-                            onToggle = { onToggleHabit(habitItem.habit.id.value) },
-                            onEdit = { onEditHabit(habitItem.habit.id.value) },
+                            onToggle = { onToggleHabit(habitItem.id) },
+                            onEdit = { onEditHabit(habitItem.id) },
                         )
                     }
                 }
@@ -204,7 +233,7 @@ fun TodayScreen(
 
 @Composable
 private fun HabitListItem(
-    item: TodayHabit,
+    item: HabitItemUi,
     onToggle: () -> Unit,
     onEdit: () -> Unit,
 ) {
@@ -220,8 +249,8 @@ private fun HabitListItem(
         IconBadge(
             icon = {
                 Icon(
-                    imageVector = habitIconToVector(item.habit.icon),
-                    contentDescription = item.habit.name,
+                    imageVector = habitIconToVector(item.icon),
+                    contentDescription = item.name,
                     tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(22.dp),
                 )
@@ -233,7 +262,7 @@ private fun HabitListItem(
 
         Column(modifier = Modifier.weight(1f)) {
             Text(
-                text = item.habit.name,
+                text = item.name,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface,
             )
@@ -330,6 +359,37 @@ private fun sampleTodayHabits(): List<TodayHabit> {
 @Composable
 private fun TodayScreenPreview() {
     HabitTrackerTheme {
-        TodayScreen()
+        TodayView(
+            dateLabel = "Wednesday, September 16",
+            habits = listOf(
+                HabitItemUi(
+                    id = 1L,
+                    name = "Morning Run",
+                    icon = HabitIcon.RUN,
+                    completed = true,
+                    currentStreak = 4,
+                ),
+                HabitItemUi(
+                    id = 2L,
+                    name = "Read 30min",
+                    icon = HabitIcon.READ,
+                    completed = false,
+                    currentStreak = 2,
+                ),
+                HabitItemUi(
+                    id = 3L,
+                    name = "Drink Water",
+                    icon = HabitIcon.WATER,
+                    completed = true,
+                    currentStreak = 7,
+                ),
+            ),
+            progressText = "2 / 3",
+            progress = 0.67f,
+            onStatsClick = {},
+            onAddHabit = {},
+            onToggleHabit = {},
+            onEditHabit = {},
+        )
     }
 }
