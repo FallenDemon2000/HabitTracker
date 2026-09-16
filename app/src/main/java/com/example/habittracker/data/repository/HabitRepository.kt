@@ -2,8 +2,8 @@ package com.example.habittracker.data.repository
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.room.withTransaction
-import com.example.habittracker.core.domain.error.HabitError
-import com.example.habittracker.core.domain.error.HabitResult
+import com.example.habittracker.core.domain.model.HabitError
+import com.example.habittracker.core.domain.model.HabitResult
 import com.example.habittracker.core.domain.model.Habit
 import com.example.habittracker.core.domain.model.HabitCompletion
 import com.example.habittracker.core.domain.model.HabitDraft

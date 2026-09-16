@@ -1,6 +1,4 @@
-package com.example.habittracker.core.domain.error
-
-import com.example.habittracker.core.domain.model.HabitId
+package com.example.habittracker.core.domain.model
 
 sealed interface HabitError {
     data class InvalidName(val reason: Reason) : HabitError {
@@ -28,10 +26,4 @@ sealed interface HabitError {
     data class NotFound(val habitId: HabitId) : HabitError
 
     data class PersistenceConstraint(val operation: String) : HabitError
-}
-
-sealed interface HabitResult<out T> {
-    data class Success<T>(val value: T) : HabitResult<T>
-
-    data class Failure(val error: HabitError) : HabitResult<Nothing>
 }

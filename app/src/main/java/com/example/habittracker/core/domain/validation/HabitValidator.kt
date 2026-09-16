@@ -1,6 +1,6 @@
 package com.example.habittracker.core.domain.validation
 
-import com.example.habittracker.core.domain.error.HabitError
+import com.example.habittracker.core.domain.model.HabitError
 import com.example.habittracker.core.domain.model.Habit
 import com.example.habittracker.core.domain.model.HabitDraft
 import com.example.habittracker.core.domain.model.HabitIcon
