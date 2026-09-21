@@ -11,6 +11,14 @@ Single-module Jetpack Compose app. Use this file as a map to the project resourc
 
 When creating or changing UI, consult the HTML mock-ups first, then use the requirements document for behavior and edge cases. Use the bundled Inter and Manrope fonts from `specs/Fonts/` when implementing the design. Always lazy-load from the specs when needed.
 
+## Agents
+
+Custom agents for specialized tasks:
+
+- **`ai-retrospective`** — Runs at session end to extract generalizable Android learnings from work done and propose new skills or skill updates. Read `.agents/agents/ai-retrospective.agent.md` for detailed instructions.
+
+---
+
 ## Applicable skills
 
 For Android work, before working on a layer, **always load the corresponding skill first**, and use the relevant available `android-*` skills (available in .agents directory), especially:
