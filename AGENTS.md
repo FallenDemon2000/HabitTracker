@@ -15,7 +15,7 @@ When creating or changing UI, consult the HTML mock-ups first, then use the requ
 
 Custom agents for specialized tasks:
 
-- **`ai-retrospective`** — Runs at session end to extract generalizable Android learnings from work done and propose new skills or skill updates. Read `.agents/agents/ai-retrospective.agent.md` for detailed instructions.
+- **`ai-retrospective`** — Runs at the end of a stable milestone or session to extract generalizable Android learnings from work done and propose new skills or skill updates. It should analyze commits, file changes, architecture decisions, and project guidance while filtering out project-specific domain detail. Read `.agents/agents/ai-retrospective.agent.md` for detailed instructions.
 
 ---
 
