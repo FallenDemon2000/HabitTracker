@@ -43,7 +43,6 @@ private fun AppNavHost(
             TodayScreen(
                 onStatsClick = { onNavigate(Screens.Statistics) },
                 onAddHabit = { onNavigate(Screens.CreateHabit) },
-                onToggleHabit = {},
                 onEditHabit = { habitId -> onNavigate(Screens.EditHabit(habitId)) },
             )
         }
