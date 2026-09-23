@@ -49,6 +49,8 @@ class HabitStatisticsCalculator {
             val dates = completionDates[habit.id].orEmpty()
             HabitStreak(
                 habitId = habit.id,
+                name = habit.name,
+                icon = habit.icon,
                 current = currentStreak(habit, dates, todayDate, today.zone),
                 best = bestStreak(habit, dates, todayDate, today.zone),
             )

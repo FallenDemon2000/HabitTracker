@@ -52,7 +52,6 @@ import com.example.habittracker.presentation.ui.components.AppCard
 import com.example.habittracker.presentation.ui.components.AppIconButton
 import com.example.habittracker.presentation.ui.components.ScreenHeader
 import com.example.habittracker.presentation.theme.HabitTrackerTheme
-import com.example.habittracker.presentation.viewmodel.StatsUiState
 import com.example.habittracker.presentation.viewmodel.StatsViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.material3.MaterialTheme
@@ -68,6 +67,8 @@ fun StatsScreen(
         currentWeekPercentage = uiState.currentWeekPercentage,
         bestStreak = uiState.bestStreak,
         activeCount = uiState.activeCount,
+        heatmap = uiState.heatmap,
+        streaks = uiState.streaks,
         onBack = onBack,
     )
 }
@@ -77,6 +78,8 @@ private fun StatsView(
     currentWeekPercentage: Int,
     bestStreak: Int,
     activeCount: Int,
+    heatmap: List<HeatmapCell>,
+    streaks: List<HabitStreak>,
     onBack: () -> Unit,
 ) {
     Column(
@@ -161,14 +164,7 @@ private fun StatsView(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val rows = listOf(
-                    listOf(75, 50, 100, 25, 90, 0, 30),
-                    listOf(100, 70, 60, 20, 100, 40, 80),
-                    listOf(30, 70, 100, 50, 90, 60, 40),
-                    listOf(10, 95, 0, 35, 85, 75, 0),
-                )
-
-                rows.forEachIndexed { rowIndex, values ->
+                heatmap.chunked(7).forEachIndexed { rowIndex, values ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -180,28 +176,10 @@ private fun StatsView(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.width(24.dp),
                         )
-                        values.forEachIndexed { index, value ->
-                            val filled = value > 0
-                            val color = when {
-                                value == 0 -> Color(0xFF252540)
-                                value <= 25 -> Color(0xFF6C63FF).copy(alpha = 0.3f)
-                                value <= 50 -> Color(0xFF6C63FF).copy(alpha = 0.6f)
-                                value <= 75 -> Color(0xFF6C63FF).copy(alpha = 0.85f)
-                                else -> Color(0xFF6C63FF)
-                            }
-                            val isToday = rowIndex == 3 && index == 4
-                            val isFuture = rowIndex == 3 && index >= 5
-                            Box(
-                                modifier = Modifier
-                                    .width(32.dp)
-                                    .height(32.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(color)
-                                    .then(
-                                        if (isFuture) Modifier.border(1.dp, Color(0xFF333350), RoundedCornerShape(6.dp))
-                                        else if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(6.dp))
-                                        else Modifier
-                                    )
+                        values.forEach { cell ->
+                            ActivityHeatCell(
+                                cell = cell,
+                                modifier = Modifier.width(32.dp).height(32.dp),
                             )
                         }
                     }
@@ -225,15 +203,7 @@ private fun StatsView(
                                 .width(14.dp)
                                 .height(14.dp)
                                 .clip(RoundedCornerShape(3.dp))
-                                .background(
-                                    when (index) {
-                                        0 -> Color(0xFF252540)
-                                        1 -> Color(0xFF6C63FF).copy(alpha = 0.3f)
-                                        2 -> Color(0xFF6C63FF).copy(alpha = 0.6f)
-                                        3 -> Color(0xFF6C63FF).copy(alpha = 0.85f)
-                                        else -> Color(0xFF6C63FF)
-                                    }
-                                )
+                                .background(activityLegendColor(index))
                         )
                     }
                     Spacer(modifier = Modifier.width(5.dp))
@@ -259,16 +229,52 @@ private fun StatsView(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            items(sampleStatistics().streaks, key = { it.habitId.value }) { streak ->
+            items(streaks, key = { it.habitId.value }) { streak ->
                 HabitStreakRow(
-                    habitName = habitName(streak.habitId.value),
-                    icon = streakIcon(streak.habitId.value),
+                    habitName = streak.name,
+                    icon = streak.icon,
                     current = streak.current,
                     best = streak.best,
                 )
             }
         }
     }
+}
+
+@Composable
+private fun ActivityHeatCell(
+    cell: HeatmapCell,
+    modifier: Modifier = Modifier,
+) {
+    val color = when {
+        cell.isFuture -> Color(0xFF252540)
+        cell.percentage == null -> Color(0xFF252540)
+        cell.percentage <= 0 -> Color(0xFF252540)
+        cell.percentage <= 25 -> Color(0xFF6C63FF).copy(alpha = 0.3f)
+        cell.percentage <= 50 -> Color(0xFF6C63FF).copy(alpha = 0.6f)
+        cell.percentage <= 75 -> Color(0xFF6C63FF).copy(alpha = 0.85f)
+        else -> Color(0xFF6C63FF)
+    }
+    val isToday = cell.date.toLocalDate().isEqual(java.time.LocalDate.now())
+    val isFutureCell = cell.isFuture
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(color)
+            .then(
+                if (isFutureCell) Modifier.border(1.dp, Color(0xFF333350), RoundedCornerShape(6.dp))
+                else if (isToday) Modifier.border(2.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(6.dp))
+                else Modifier
+            )
+    )
+}
+
+private fun activityLegendColor(index: Int): Color = when (index) {
+    0 -> Color(0xFF252540)
+    1 -> Color(0xFF6C63FF).copy(alpha = 0.3f)
+    2 -> Color(0xFF6C63FF).copy(alpha = 0.6f)
+    3 -> Color(0xFF6C63FF).copy(alpha = 0.85f)
+    else -> Color(0xFF6C63FF)
 }
 
 @Composable
@@ -369,52 +375,39 @@ private fun HabitStreakRow(
     }
 }
 
-private fun sampleStatistics(): HabitStatistics {
-    val now = ZonedDateTime.now()
-    val list = listOf(
-        HeatmapCell(date = now.minusDays(27), completedScheduledHabits = 1, scheduledHabits = 1, percentage = 100),
-        HeatmapCell(date = now.minusDays(26), completedScheduledHabits = 0, scheduledHabits = 1, percentage = 0),
-        HeatmapCell(date = now.minusDays(25), completedScheduledHabits = 1, scheduledHabits = 1, percentage = 100),
-        HeatmapCell(date = now.minusDays(24), completedScheduledHabits = 1, scheduledHabits = 1, percentage = 100),
-        HeatmapCell(date = now.minusDays(23), completedScheduledHabits = 1, scheduledHabits = 1, percentage = 100),
-        HeatmapCell(date = now.minusDays(22), completedScheduledHabits = 0, scheduledHabits = 1, percentage = 0),
-        HeatmapCell(date = now.minusDays(21), completedScheduledHabits = 1, scheduledHabits = 1, percentage = 100),
-    )
-    return HabitStatistics(
-        today = TodayProgress(date = now, habits = emptyList()),
-        currentWeekPercentage = 87,
-        activeCount = 7,
-        heatmap = list,
-        streaks = listOf(
-            HabitStreak(habitId = HabitId(1), current = 12, best = 18),
-            HabitStreak(habitId = HabitId(2), current = 5, best = 10),
-            HabitStreak(habitId = HabitId(3), current = 3, best = 7),
-        ),
-    )
-}
-
-private fun streakIcon(id: Long): HabitIcon = when (id.toInt() % 4) {
-    0 -> HabitIcon.RUN
-    1 -> HabitIcon.READ
-    2 -> HabitIcon.WATER
-    else -> HabitIcon.MEDITATE
-}
-
-private fun habitName(id: Long): String = when (id.toInt() % 4) {
-    0 -> "Morning Run"
-    1 -> "Read 30min"
-    2 -> "Drink Water"
-    else -> "Meditate"
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFF0F0F15)
 @Composable
 private fun StatsScreenPreview() {
+    val previewValues = listOf(
+        0, 25, 60, 100, 80, 15, 0,
+        35, 0, 75, 90, 100, 30, 50,
+        20, 55, 85, 100, 40, 0, 70,
+        100, 45, 0, 90, 80, 25, 65,
+    )
+    val today = ZonedDateTime.now()
+    val startDate = today.toLocalDate().with(java.time.DayOfWeek.MONDAY).minusWeeks(3)
+    val previewHeatmap = previewValues.mapIndexed { index, value ->
+        val date = startDate.plusDays(index.toLong())
+        HeatmapCell(
+            date = date.atStartOfDay(today.zone),
+            completedScheduledHabits = if (value == 0) 0 else value / 25,
+            scheduledHabits = 1,
+            percentage = if (date.isAfter(today.toLocalDate())) null else value,
+        )
+    }
+    val previewStreaks = listOf(
+        HabitStreak(habitId = com.example.habittracker.core.domain.model.HabitId(1), name = "Morning Run", icon = HabitIcon.RUN, current = 12, best = 18),
+        HabitStreak(habitId = com.example.habittracker.core.domain.model.HabitId(2), name = "Read 30 min", icon = HabitIcon.READ, current = 5, best = 10),
+        HabitStreak(habitId = com.example.habittracker.core.domain.model.HabitId(3), name = "Drink Water", icon = HabitIcon.WATER, current = 3, best = 7),
+    )
+
     HabitTrackerTheme {
         StatsView(
             currentWeekPercentage = 87,
             bestStreak = 12,
             activeCount = 7,
+            heatmap = previewHeatmap,
+            streaks = previewStreaks,
             onBack = {},
         )
     }
