@@ -1,0 +1,51 @@
+package com.example.habittracker.presentation.ui.icons
+
+import androidx.compose.ui.graphics.vector.ImageVector
+
+private val healthIconVector: ImageVector = habitIconVector("MedicalServices") {
+    moveTo(20.0f, 6.0f)
+    horizontalLineToRelative(-4.0f)
+    verticalLineTo(4.0f)
+    curveToRelative(0.0f, -1.1f, -0.9f, -2.0f, -2.0f, -2.0f)
+    horizontalLineToRelative(-4.0f)
+    curveTo(8.9f, 2.0f, 8.0f, 2.9f, 8.0f, 4.0f)
+    verticalLineToRelative(2.0f)
+    horizontalLineTo(4.0f)
+    curveTo(2.9f, 6.0f, 2.0f, 6.9f, 2.0f, 8.0f)
+    verticalLineToRelative(12.0f)
+    curveToRelative(0.0f, 1.1f, 0.9f, 2.0f, 2.0f, 2.0f)
+    horizontalLineToRelative(16.0f)
+    curveToRelative(1.1f, 0.0f, 2.0f, -0.9f, 2.0f, -2.0f)
+    verticalLineTo(8.0f)
+    curveTo(22.0f, 6.9f, 21.1f, 6.0f, 20.0f, 6.0f)
+    close()
+    moveTo(10.0f, 4.0f)
+    horizontalLineToRelative(4.0f)
+    verticalLineToRelative(2.0f)
+    horizontalLineToRelative(-4.0f)
+    verticalLineTo(4.0f)
+    close()
+    moveTo(20.0f, 20.0f)
+    horizontalLineTo(4.0f)
+    verticalLineTo(8.0f)
+    horizontalLineToRelative(16.0f)
+    verticalLineTo(20.0f)
+    close()
+    moveTo(13.0f, 10.0f)
+    lineToRelative(-2.0f, 0.0f)
+    lineToRelative(0.0f, 3.0f)
+    lineToRelative(-3.0f, 0.0f)
+    lineToRelative(0.0f, 2.0f)
+    lineToRelative(3.0f, 0.0f)
+    lineToRelative(0.0f, 3.0f)
+    lineToRelative(2.0f, 0.0f)
+    lineToRelative(0.0f, -3.0f)
+    lineToRelative(3.0f, 0.0f)
+    lineToRelative(0.0f, -2.0f)
+    lineToRelative(-3.0f, 0.0f)
+    close()
+}
+
+@Suppress("UnusedReceiverParameter")
+internal val HabitTrackerIcons.healthIcon: ImageVector
+    get() = healthIconVector
