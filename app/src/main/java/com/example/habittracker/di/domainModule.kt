@@ -2,6 +2,7 @@ package com.example.habittracker.di
 
 import com.example.habittracker.core.domain.usecase.CreateHabitUseCase
 import com.example.habittracker.core.domain.usecase.DeleteHabitUseCase
+import com.example.habittracker.core.domain.usecase.GetHabitUseCase
 import com.example.habittracker.core.domain.usecase.ObserveHabitsUseCase
 import com.example.habittracker.core.domain.usecase.ObserveStatisticsUseCase
 import com.example.habittracker.core.domain.usecase.ObserveTodayUseCase
@@ -14,6 +15,7 @@ val domainModule = module {
     singleOf(::ObserveHabitsUseCase)
     singleOf(::ObserveTodayUseCase)
     singleOf(::ObserveStatisticsUseCase)
+    singleOf(::GetHabitUseCase)
     singleOf(::CreateHabitUseCase)
     singleOf(::UpdateHabitUseCase)
     singleOf(::DeleteHabitUseCase)

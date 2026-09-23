@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.habittracker.core.domain.model.HabitDraft
 import com.example.habittracker.core.domain.model.HabitIcon
 import com.example.habittracker.core.domain.model.HabitId
+import com.example.habittracker.core.domain.model.HabitResult
 import com.example.habittracker.core.domain.model.HabitSchedule
 import com.example.habittracker.core.domain.model.HabitUpdate
 import com.example.habittracker.core.domain.usecase.CreateHabitUseCase
 import com.example.habittracker.core.domain.usecase.DeleteHabitUseCase
+import com.example.habittracker.core.domain.usecase.GetHabitUseCase
 import com.example.habittracker.core.domain.usecase.UpdateHabitUseCase
 import com.example.habittracker.presentation.screens.HabitEditorMode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +28,7 @@ data class HabitEditorUiState(
 )
 
 class HabitEditorViewModel(
+    private val getHabitUseCase: GetHabitUseCase,
     private val createHabitUseCase: CreateHabitUseCase,
     private val updateHabitUseCase: UpdateHabitUseCase,
     private val deleteHabitUseCase: DeleteHabitUseCase,
@@ -44,6 +47,24 @@ class HabitEditorViewModel(
 
     fun onDaysChanged(days: Set<DayOfWeek>) {
         _uiState.update { it.copy(selectedDays = days) }
+    }
+
+    fun loadHabit(habitId: Long?) {
+        if (habitId == null) return
+        viewModelScope.launch {
+            val id = HabitId(habitId)
+            val habit = getHabitUseCase(id)
+            if (habit is HabitResult.Success) {
+                val habitValue = habit.value
+                _uiState.update {
+                    it.copy(
+                        name = habitValue.name,
+                        icon = habitValue.icon,
+                        selectedDays = habitValue.schedule.toSelectedDays(),
+                    )
+                }
+            }
+        }
     }
 
     fun saveHabit(
@@ -90,4 +111,15 @@ class HabitEditorViewModel(
         saturday = contains(DayOfWeek.SATURDAY),
         sunday = contains(DayOfWeek.SUNDAY),
     )
+
+    private fun HabitSchedule.toSelectedDays(): Set<DayOfWeek> =
+        buildSet {
+            if (monday) add(DayOfWeek.MONDAY)
+            if (tuesday) add(DayOfWeek.TUESDAY)
+            if (wednesday) add(DayOfWeek.WEDNESDAY)
+            if (thursday) add(DayOfWeek.THURSDAY)
+            if (friday) add(DayOfWeek.FRIDAY)
+            if (saturday) add(DayOfWeek.SATURDAY)
+            if (sunday) add(DayOfWeek.SUNDAY)
+    }
 }

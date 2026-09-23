@@ -59,12 +59,11 @@ fun HabitEditorScreen(
     mode: HabitEditorMode,
     habitId: Long?,
     onBack: () -> Unit,
-    onSave: (String, HabitIcon, Set<DayOfWeek>) -> Unit,
-    onDelete: (() -> Unit),
-    onDiscard: (() -> Unit),
     viewModel: HabitEditorViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    viewModel.loadHabit(habitId)
+
     HabitEditorView(
         mode = mode,
         name = uiState.name,
@@ -75,19 +74,14 @@ fun HabitEditorScreen(
         onDaysChange = { value -> viewModel.onDaysChanged(value) },
         onBack = onBack,
         onSave = { name, icon, days ->
-            viewModel.onNameChanged(name)
-            viewModel.onIconChanged(icon)
-            viewModel.onDaysChanged(days)
             viewModel.saveHabit(mode, name, icon, days)
-            onSave(name, icon, days)
             onBack()
         },
         onDelete = {
             val resolvedId = habitId ?: return@HabitEditorView
             viewModel.deleteHabit(HabitId(resolvedId))
-            onDelete.invoke()
+            onBack()
         },
-        onDiscard = onDiscard,
     )
 }
 
@@ -103,7 +97,6 @@ private fun HabitEditorView(
     onBack: () -> Unit,
     onSave: (String, HabitIcon, Set<DayOfWeek>) -> Unit,
     onDelete: (() -> Unit),
-    onDiscard: (() -> Unit),
 ) {
     var nameValue by remember(name) { mutableStateOf(name) }
     var activeIcon by remember(icon) { mutableStateOf(icon) }
@@ -135,8 +128,8 @@ private fun HabitEditorView(
         Spacer(modifier = Modifier.height(22.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().clickable { expandedPicker = !expandedPicker },
         ) {
             IconBadge(
                 icon = {
@@ -155,7 +148,6 @@ private fun HabitEditorView(
             Text(
                 text = "Tap to change icon",
                 style = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.secondary),
-                modifier = Modifier.clickable { expandedPicker = !expandedPicker },
             )
         }
 
@@ -171,9 +163,7 @@ private fun HabitEditorView(
                 columns = GridCells.Fixed(5),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(260.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 items(HabitIcon.entries.toList()) { icon ->
                     val selected = activeIcon == icon
@@ -274,7 +264,7 @@ private fun HabitEditorView(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onDiscard.invoke() },
+                    .clickable { onBack() },
             )
         } else {
             Text(
@@ -299,7 +289,7 @@ private fun HabitEditorView(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.clickable {
                         showDeleteDialog = false
-                        onDelete.invoke()
+                        onDelete()
                     },
                 )
             },
@@ -329,7 +319,6 @@ private fun CreateHabitPreview() {
             onBack = {},
             onSave = { _, _, _ -> },
             onDelete = {},
-            onDiscard = {},
         )
     }
 }
