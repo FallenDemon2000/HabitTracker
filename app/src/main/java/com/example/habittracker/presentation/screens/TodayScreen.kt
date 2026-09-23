@@ -76,7 +76,6 @@ import java.util.Locale
 fun TodayScreen(
     onStatsClick: () -> Unit,
     onAddHabit: () -> Unit,
-    onToggleHabit: (Long) -> Unit,
     onEditHabit: (Long) -> Unit,
     viewModel: TodayViewModel = koinViewModel(),
 ) {
@@ -88,10 +87,7 @@ fun TodayScreen(
         progress = uiState.progress,
         onStatsClick = onStatsClick,
         onAddHabit = onAddHabit,
-        onToggleHabit = { habitId ->
-            onToggleHabit(habitId)
-            viewModel.onToggleHabit(habitId)
-        },
+        onToggleHabit = viewModel::onToggleHabit,
         onEditHabit = onEditHabit,
     )
 }
