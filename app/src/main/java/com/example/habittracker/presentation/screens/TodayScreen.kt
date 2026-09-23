@@ -16,30 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Article
-import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.Bed
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.DirectionsBike
-import androidx.compose.material.icons.outlined.DirectionsRun
-import androidx.compose.material.icons.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.DinnerDining
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.GridView
-import androidx.compose.material.icons.outlined.HealthAndSafety
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.MedicalServices
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.SelfImprovement
-import androidx.compose.material.icons.outlined.Smartphone
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -47,27 +25,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.habittracker.core.domain.model.Habit
-import com.example.habittracker.core.domain.model.HabitId
 import com.example.habittracker.core.domain.model.HabitIcon
-import com.example.habittracker.core.domain.model.HabitSchedule
-import com.example.habittracker.core.domain.model.TodayHabit
+import com.example.habittracker.presentation.theme.HabitTrackerTheme
 import com.example.habittracker.presentation.ui.components.AppCheckbox
 import com.example.habittracker.presentation.ui.components.AppIconButton
 import com.example.habittracker.presentation.ui.components.AppProgressBar
 import com.example.habittracker.presentation.ui.components.IconBadge
 import com.example.habittracker.presentation.ui.components.ScreenHeader
-import com.example.habittracker.presentation.theme.HabitTrackerTheme
+import com.example.habittracker.presentation.ui.icons.HabitTrackerIcons
+import com.example.habittracker.presentation.ui.icons.addIcon
+import com.example.habittracker.presentation.ui.icons.barChartIcon
+import com.example.habittracker.presentation.ui.icons.starIcon
 import com.example.habittracker.presentation.viewmodel.HabitItemUi
 import com.example.habittracker.presentation.viewmodel.TodayViewModel
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.material3.MaterialTheme
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -122,7 +98,7 @@ private fun TodayView(
                         background = MaterialTheme.colorScheme.surface,
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.BarChart,
+                            imageVector = HabitTrackerIcons.barChartIcon,
                             contentDescription = "Open statistics",
                             tint = MaterialTheme.colorScheme.secondary,
                         )
@@ -217,7 +193,7 @@ private fun TodayView(
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Add,
+                    imageVector = HabitTrackerIcons.addIcon,
                     contentDescription = "Create new habit",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp),
@@ -245,7 +221,7 @@ private fun HabitListItem(
         IconBadge(
             icon = {
                 Icon(
-                    imageVector = habitIconToVector(item.icon),
+                    imageVector = HabitTrackerIcons.iconFor(item.icon),
                     contentDescription = item.name,
                     tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.size(22.dp),
@@ -268,7 +244,7 @@ private fun HabitListItem(
             ) {
                 if (item.currentStreak > 0) {
                     Icon(
-                        imageVector = Icons.Outlined.Star,
+                        imageVector = HabitTrackerIcons.starIcon,
                         contentDescription = null,
                         tint = Color(0xFFF59E0B),
                         modifier = Modifier.size(11.dp),
@@ -295,60 +271,6 @@ private fun HabitListItem(
             modifier = Modifier.size(30.dp),
         )
     }
-}
-
-private fun habitIconToVector(icon: HabitIcon): ImageVector = when (icon) {
-    HabitIcon.RUN -> Icons.Outlined.DirectionsRun
-    HabitIcon.READ -> Icons.Outlined.MenuBook
-    HabitIcon.WATER -> Icons.Outlined.WaterDrop
-    HabitIcon.MEDITATE -> Icons.Outlined.SelfImprovement
-    HabitIcon.SLEEP -> Icons.Outlined.Bed
-    HabitIcon.CODE -> Icons.Outlined.Code
-    HabitIcon.MUSIC -> Icons.Outlined.MusicNote
-    HabitIcon.COOK -> Icons.Outlined.DinnerDining
-    HabitIcon.JOURNAL -> Icons.Outlined.Article
-    HabitIcon.GYM -> Icons.Outlined.FitnessCenter
-    HabitIcon.YOGA -> Icons.Outlined.SelfImprovement
-    HabitIcon.WALK -> Icons.Outlined.DirectionsWalk
-    HabitIcon.CYCLE -> Icons.Outlined.DirectionsBike
-    HabitIcon.STUDY -> Icons.Outlined.CalendarMonth
-    HabitIcon.NO_PHONE -> Icons.Outlined.Smartphone
-    HabitIcon.VITAMINS -> Icons.Outlined.HealthAndSafety
-    HabitIcon.LANGUAGE -> Icons.Outlined.Language
-    HabitIcon.GRATITUDE -> Icons.Outlined.StarOutline
-    HabitIcon.HEALTH -> Icons.Outlined.MedicalServices
-    HabitIcon.ORGANIZE -> Icons.Outlined.GridView
-}
-
-private fun sampleTodayHabits(): List<TodayHabit> {
-    fun habit(name: String, icon: HabitIcon, completed: Boolean, streak: Int): TodayHabit {
-        val safeId = when (name) {
-            "Morning Run" -> 1L
-            "Read 30min" -> 2L
-            "Drink Water" -> 3L
-            "Meditate" -> 4L
-            else -> 5L
-        }
-        return TodayHabit(
-            habit = Habit(
-                id = HabitId(safeId),
-                name = name,
-                icon = icon,
-                schedule = HabitSchedule(monday = true, tuesday = true, wednesday = true, thursday = true, friday = true, saturday = false, sunday = false),
-                creationDate = ZonedDateTime.now().minusDays(30),
-            ),
-            completed = completed,
-            currentStreak = streak,
-        )
-    }
-
-    return listOf(
-        habit("Morning Run", HabitIcon.RUN, true, 12),
-        habit("Read 30min", HabitIcon.READ, true, 5),
-        habit("Drink Water", HabitIcon.WATER, false, 3),
-        habit("Meditate", HabitIcon.MEDITATE, false, 0),
-        habit("Code 1hr", HabitIcon.CODE, false, 8),
-    )
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFF0F0F15)

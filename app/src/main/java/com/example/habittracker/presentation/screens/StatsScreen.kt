@@ -16,20 +16,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.BarChart
-import androidx.compose.material.icons.outlined.Bolt
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.HealthAndSafety
-import androidx.compose.material.icons.outlined.MedicalServices
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.SelfImprovement
-import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,18 +31,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.habittracker.core.domain.model.HabitIcon
-import com.example.habittracker.core.domain.model.HabitStatistics
 import com.example.habittracker.core.domain.model.HabitStreak
 import com.example.habittracker.core.domain.model.HeatmapCell
-import com.example.habittracker.core.domain.model.HabitId
-import com.example.habittracker.core.domain.model.TodayProgress
+import com.example.habittracker.presentation.theme.HabitTrackerTheme
 import com.example.habittracker.presentation.ui.components.AppCard
 import com.example.habittracker.presentation.ui.components.AppIconButton
 import com.example.habittracker.presentation.ui.components.ScreenHeader
-import com.example.habittracker.presentation.theme.HabitTrackerTheme
+import com.example.habittracker.presentation.ui.icons.HabitTrackerIcons
+import com.example.habittracker.presentation.ui.icons.arrowBackIcon
 import com.example.habittracker.presentation.viewmodel.StatsViewModel
 import org.koin.androidx.compose.koinViewModel
-import androidx.compose.material3.MaterialTheme
 import java.time.ZonedDateTime
 
 @Composable
@@ -97,7 +83,7 @@ private fun StatsView(
                     background = MaterialTheme.colorScheme.surface,
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        imageVector = HabitTrackerIcons.arrowBackIcon,
                         contentDescription = "Back to Today",
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
@@ -326,28 +312,7 @@ private fun HabitStreakRow(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                imageVector = when (icon) {
-                    HabitIcon.RUN -> androidx.compose.material.icons.Icons.Outlined.BarChart
-                    HabitIcon.READ -> androidx.compose.material.icons.Icons.Outlined.MenuBook
-                    HabitIcon.WATER -> androidx.compose.material.icons.Icons.Outlined.WaterDrop
-                    HabitIcon.MEDITATE -> androidx.compose.material.icons.Icons.Outlined.SelfImprovement
-                    HabitIcon.SLEEP -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.CODE -> androidx.compose.material.icons.Icons.Outlined.Bolt
-                    HabitIcon.MUSIC -> androidx.compose.material.icons.Icons.Outlined.MusicNote
-                    HabitIcon.COOK -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.JOURNAL -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.GYM -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.YOGA -> androidx.compose.material.icons.Icons.Outlined.SelfImprovement
-                    HabitIcon.WALK -> androidx.compose.material.icons.Icons.Outlined.DirectionsWalk
-                    HabitIcon.CYCLE -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.STUDY -> androidx.compose.material.icons.Icons.Outlined.CalendarMonth
-                    HabitIcon.NO_PHONE -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.VITAMINS -> androidx.compose.material.icons.Icons.Outlined.HealthAndSafety
-                    HabitIcon.LANGUAGE -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.GRATITUDE -> androidx.compose.material.icons.Icons.Outlined.Star
-                    HabitIcon.HEALTH -> androidx.compose.material.icons.Icons.Outlined.MedicalServices
-                    HabitIcon.ORGANIZE -> androidx.compose.material.icons.Icons.Outlined.Star
-                },
+                imageVector = HabitTrackerIcons.iconFor(icon),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(18.dp),

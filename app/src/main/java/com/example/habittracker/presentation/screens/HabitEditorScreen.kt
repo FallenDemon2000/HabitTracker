@@ -18,27 +18,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
-import androidx.compose.material.icons.outlined.Article
-import androidx.compose.material.icons.outlined.Bed
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.material.icons.outlined.Code
-import androidx.compose.material.icons.outlined.DirectionsBike
-import androidx.compose.material.icons.outlined.DirectionsRun
-import androidx.compose.material.icons.outlined.DirectionsWalk
-import androidx.compose.material.icons.outlined.DinnerDining
-import androidx.compose.material.icons.outlined.FitnessCenter
-import androidx.compose.material.icons.outlined.GridView
-import androidx.compose.material.icons.outlined.HealthAndSafety
-import androidx.compose.material.icons.outlined.Language
-import androidx.compose.material.icons.outlined.MedicalServices
-import androidx.compose.material.icons.outlined.MenuBook
-import androidx.compose.material.icons.outlined.MusicNote
-import androidx.compose.material.icons.outlined.SelfImprovement
-import androidx.compose.material.icons.outlined.Smartphone
-import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -51,7 +30,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -66,6 +44,8 @@ import com.example.habittracker.presentation.ui.components.AppTextField
 import com.example.habittracker.presentation.ui.components.IconBadge
 import com.example.habittracker.presentation.ui.components.ScreenHeader
 import com.example.habittracker.presentation.theme.HabitTrackerTheme
+import com.example.habittracker.presentation.ui.icons.HabitTrackerIcons
+import com.example.habittracker.presentation.ui.icons.arrowBackIcon
 import com.example.habittracker.presentation.viewmodel.HabitEditorViewModel
 import org.koin.androidx.compose.koinViewModel
 import androidx.compose.material3.MaterialTheme
@@ -105,7 +85,7 @@ fun HabitEditorScreen(
         onDelete = {
             val resolvedId = habitId ?: return@HabitEditorView
             viewModel.deleteHabit(HabitId(resolvedId))
-            onDelete?.invoke() ?: onBack()
+            onDelete.invoke()
         },
         onDiscard = onDiscard,
     )
@@ -143,7 +123,7 @@ private fun HabitEditorView(
             leading = {
                 AppIconButton(onClick = onBack, background = MaterialTheme.colorScheme.surface) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                        imageVector = HabitTrackerIcons.arrowBackIcon,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.onSurface,
                     )
@@ -161,7 +141,7 @@ private fun HabitEditorView(
             IconBadge(
                 icon = {
                     Icon(
-                        imageVector = habitIconToVector(activeIcon),
+                        imageVector = HabitTrackerIcons.iconFor(activeIcon),
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.secondary,
                         modifier = Modifier.size(28.dp),
@@ -215,7 +195,7 @@ private fun HabitEditorView(
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
-                            imageVector = habitIconToVector(icon),
+                            imageVector = HabitTrackerIcons.iconFor(icon),
                             contentDescription = icon.name.lowercase(Locale.getDefault()),
                             tint = if (selected) Color.White else MaterialTheme.colorScheme.secondary,
                             modifier = Modifier.size(22.dp),
@@ -294,7 +274,7 @@ private fun HabitEditorView(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable { onDiscard?.invoke() ?: onBack() },
+                    .clickable { onDiscard.invoke() },
             )
         } else {
             Text(
@@ -319,7 +299,7 @@ private fun HabitEditorView(
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.clickable {
                         showDeleteDialog = false
-                        onDelete?.invoke()
+                        onDelete.invoke()
                     },
                 )
             },
@@ -333,28 +313,6 @@ private fun HabitEditorView(
     }
 }
 
-private fun habitIconToVector(icon: HabitIcon): ImageVector = when (icon) {
-    HabitIcon.RUN -> Icons.Outlined.DirectionsRun
-    HabitIcon.READ -> Icons.Outlined.MenuBook
-    HabitIcon.WATER -> Icons.Outlined.WaterDrop
-    HabitIcon.MEDITATE -> Icons.Outlined.SelfImprovement
-    HabitIcon.SLEEP -> Icons.Outlined.Bed
-    HabitIcon.CODE -> Icons.Outlined.Code
-    HabitIcon.MUSIC -> Icons.Outlined.MusicNote
-    HabitIcon.COOK -> Icons.Outlined.DinnerDining
-    HabitIcon.JOURNAL -> Icons.Outlined.Article
-    HabitIcon.GYM -> Icons.Outlined.FitnessCenter
-    HabitIcon.YOGA -> Icons.Outlined.SelfImprovement
-    HabitIcon.WALK -> Icons.Outlined.DirectionsWalk
-    HabitIcon.CYCLE -> Icons.Outlined.DirectionsBike
-    HabitIcon.STUDY -> Icons.Outlined.CalendarMonth
-    HabitIcon.NO_PHONE -> Icons.Outlined.Smartphone
-    HabitIcon.VITAMINS -> Icons.Outlined.HealthAndSafety
-    HabitIcon.LANGUAGE -> Icons.Outlined.Language
-    HabitIcon.GRATITUDE -> Icons.Outlined.StarOutline
-    HabitIcon.HEALTH -> Icons.Outlined.MedicalServices
-    HabitIcon.ORGANIZE -> Icons.Outlined.GridView
-}
 
 @Preview(showBackground = true, backgroundColor = 0xFF0F0F15)
 @Composable
