@@ -56,9 +56,6 @@ private fun AppNavHost(
                 mode = HabitEditorMode.CREATE,
                 habitId = null,
                 onBack = onBackClick,
-                onSave = { _, _, _ -> onBackClick() },
-                onDelete = {},
-                onDiscard = onBackClick,
             )
         }
 
@@ -68,9 +65,6 @@ private fun AppNavHost(
                 mode = HabitEditorMode.EDIT,
                 habitId = habitId,
                 onBack = onBackClick,
-                onSave = { _, _, _ -> onBackClick() },
-                onDelete = onBackClick,
-                onDiscard = onBackClick,
             )
         }
     }

@@ -64,6 +64,15 @@ class HabitRepository(
         }
     }
 
+    suspend fun getHabitById(habitId: HabitId): HabitResult<Habit> {
+        val habit = habitDao.getById(habitId.value)?.toDomain()
+        return if (habit != null) {
+            HabitResult.Success(habit)
+        } else {
+            HabitResult.Failure(HabitError.NotFound(habitId))
+        }
+    }
+
     suspend fun createHabit(
         draft: HabitDraft,
         today: ZonedDateTime = ZonedDateTime.now(),
