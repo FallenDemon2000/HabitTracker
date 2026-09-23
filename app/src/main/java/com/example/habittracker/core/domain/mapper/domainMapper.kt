@@ -38,4 +38,6 @@ fun HabitStatistics.toStatsUiState(): StatsUiState = StatsUiState(
     currentWeekPercentage = currentWeekPercentage,
     bestStreak = streaks.maxOfOrNull { it.best } ?: 0,
     activeCount = activeCount,
+    heatmap = heatmap,
+    streaks = streaks,
 )

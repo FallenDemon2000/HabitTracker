@@ -3,6 +3,8 @@ package com.example.habittracker.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.habittracker.core.domain.mapper.toStatsUiState
+import com.example.habittracker.core.domain.model.HeatmapCell
+import com.example.habittracker.core.domain.model.HabitStreak
 import com.example.habittracker.core.domain.usecase.ObserveStatisticsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +17,8 @@ data class StatsUiState(
     val currentWeekPercentage: Int = 0,
     val bestStreak: Int = 0,
     val activeCount: Int = 0,
+    val heatmap: List<HeatmapCell> = emptyList(),
+    val streaks: List<HabitStreak> = emptyList(),
 )
 
 class StatsViewModel(
