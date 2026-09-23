@@ -1,5 +1,7 @@
 package com.example.habittracker.presentation.ui.icons
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.ui.graphics.vector.ImageVector
 
 private val runIconVector: ImageVector = habitIconVector("Run") {
